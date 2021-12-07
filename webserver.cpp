@@ -103,27 +103,21 @@ void WebServer::thread_pool()
 void WebServer::eventListen()
 {
     //网络编程基础步骤
-    m_listenfd = socket(PF_INET, SOCK_STREAM, 0);
+    m_listenfd = socket(AF_INET6, SOCK_STREAM, 0);
     assert(m_listenfd >= 0);
 
-    //优雅关闭连接
-    if (0 == m_OPT_LINGER)
-    {
-        struct linger tmp = {0, 1};
-        setsockopt(m_listenfd, SOL_SOCKET, SO_LINGER, &tmp, sizeof(tmp));
-    }
-    else if (1 == m_OPT_LINGER)
-    {
-        struct linger tmp = {1, 1};
-        setsockopt(m_listenfd, SOL_SOCKET, SO_LINGER, &tmp, sizeof(tmp));
-    }
+    //todo: how to handle close() then...
+    struct linger linger_state;
+    linger_state.l_onoff = m_OPT_LINGER;
+    linger_state.l_linger = 0;
+    setsockopt(m_listenfd, SOL_SOCKET, SO_LINGER, (const char*)&linger_state, sizeof(linger_state));
 
     int ret = 0;
-    struct sockaddr_in address;
+    struct sockaddr_in6 address;
     bzero(&address, sizeof(address));
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = htonl(INADDR_ANY);
-    address.sin_port = htons(m_port);
+    address.sin6_family = AF_INET6;
+    address.sin6_addr = in6addr_any;
+    address.sin6_port = htons(m_port);
 
     int flag = 1;
     setsockopt(m_listenfd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
