@@ -33,70 +33,60 @@ public:
 
     void clear()
     {
-        m_mutex.lock();
+        locker_guard scopeLock(m_mutex);
         m_size = 0;
         m_front = -1;
         m_back = -1;
-        m_mutex.unlock();
     }
 
     ~block_queue()
     {
-        m_mutex.lock();
+        locker_guard scopeLock(m_mutex);
         if (m_array != NULL)
             delete [] m_array;
 
-        m_mutex.unlock();
     }
     //判断队列是否满了
     bool full() 
     {
-        m_mutex.lock();
+        locker_guard scopeLock(m_mutex);
         if (m_size >= m_max_size)
         {
 
-            m_mutex.unlock();
             return true;
         }
-        m_mutex.unlock();
         return false;
     }
     //判断队列是否为空
     bool empty() 
     {
-        m_mutex.lock();
+        locker_guard scopeLock(m_mutex);
         if (0 == m_size)
         {
-            m_mutex.unlock();
             return true;
         }
-        m_mutex.unlock();
         return false;
     }
     //返回队首元素
     bool front(T &value) 
     {
-        m_mutex.lock();
+        locker_guard scopeLock(m_mutex);
         if (0 == m_size)
         {
-            m_mutex.unlock();
             return false;
         }
         value = m_array[m_front];
-        m_mutex.unlock();
         return true;
     }
     //返回队尾元素
     bool back(T &value) 
     {
-        m_mutex.lock();
+        locker_guard scopeLock(m_mutex);
         if (0 == m_size)
         {
-            m_mutex.unlock();
             return false;
         }
         value = m_array[m_back];
-        m_mutex.unlock();
         return true;
     }
 
@@ -104,10 +94,9 @@ public:
     {
         int tmp = 0;
 
-        m_mutex.lock();
+        locker_guard scopeLock(m_mutex);
         tmp = m_size;
 
-        m_mutex.unlock();
         return tmp;
     }
 
@@ -115,10 +104,9 @@ public:
     {
         int tmp = 0;
 
-        m_mutex.lock();
+        locker_guard scopeLock(m_mutex);
         tmp = m_max_size;
 
-        m_mutex.unlock();
         return tmp;
     }
     //往队列添加元素，需要将所有使用队列的线程先唤醒
@@ -127,12 +115,11 @@ public:
     bool push(const T &item)
     {
 
-        m_mutex.lock();
+        locker_guard scopeLock(m_mutex);
         if (m_size >= m_max_size)
         {
 
             m_cond.broadcast();
-            m_mutex.unlock();
             return false;
         }
 
@@ -142,20 +129,17 @@ public:
         m_size++;
 
         m_cond.broadcast();
-        m_mutex.unlock();
         return true;
     }
     //pop时,如果当前队列没有元素,将会等待条件变量
     bool pop(T &item)
     {
 
-        m_mutex.lock();
+        locker_guard scopeLock(m_mutex);
         while (m_size <= 0)
         {
-            
             if (!m_cond.wait(m_mutex.get()))
             {
-                m_mutex.unlock();
                 return false;
             }
         }
@@ -163,7 +147,6 @@ public:
         m_front = (m_front + 1) % m_max_size;
         item = m_array[m_front];
         m_size--;
-        m_mutex.unlock();
         return true;
     }
 
@@ -173,33 +156,30 @@ public:
         struct timespec t = {0, 0};
         struct timeval now = {0, 0};
         gettimeofday(&now, NULL);
-        m_mutex.lock();
+        locker_guard scopeLock(m_mutex);
         if (m_size <= 0)
         {
             t.tv_sec = now.tv_sec + ms_timeout / 1000;
             t.tv_nsec = (ms_timeout % 1000) * 1000;
             if (!m_cond.timewait(m_mutex.get(), t))
             {
-                m_mutex.unlock();
                 return false;
             }
         }
 
         if (m_size <= 0)
         {
-            m_mutex.unlock();
             return false;
         }
 
         m_front = (m_front + 1) % m_max_size;
         item = m_array[m_front];
         m_size--;
-        m_mutex.unlock();
         return true;
     }
 
 private:
-    locker m_mutex;
+    mutable locker m_mutex;
     cond m_cond;
 
     T *m_array;

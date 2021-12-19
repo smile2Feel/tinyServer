@@ -14,6 +14,7 @@ const char *error_404_form = "The requested file was not found on this server.\n
 const char *error_500_title = "Internal Error";
 const char *error_500_form = "There was an unusual problem serving the request file.\n";
 
+//todo :better use static variable
 locker m_lock;
 map<string, string> users;
 
@@ -432,10 +433,9 @@ http_conn::HTTP_CODE http_conn::do_request()
 
             if (users.find(name) == users.end())
             {
-                m_lock.lock();
+                locker_guard scopeLock(m_lock);
                 int res = mysql_query(mysql, sql_insert);
                 users.insert(pair<string, string>(name, password));
-                m_lock.unlock();
 
                 if (!res)
                     strcpy(m_url, "/log.html");

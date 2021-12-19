@@ -5,6 +5,10 @@
 #include <pthread.h>
 #include <semaphore.h>
 
+//originally check for PTHREAD_RETURN_VALUE
+#define MCHECK(ret) ({ __typeof__ (ret) errnum = (ret);               \
+                        assert(errnum == 0); (void) errnum;})
+
 class sem
 {
 public:
@@ -38,6 +42,7 @@ public:
 private:
     sem_t m_sem;
 };
+
 class locker
 {
 public:
@@ -52,6 +57,8 @@ public:
     {
         pthread_mutex_destroy(&m_mutex);
     }
+
+    //internal usage
     bool lock()
     {
         return pthread_mutex_lock(&m_mutex) == 0;
@@ -65,9 +72,35 @@ public:
         return &m_mutex;
     }
 
+    //noncopyable
+    locker(const locker&) = delete;
+    locker& operator=(const locker&) = delete;
+
 private:
     pthread_mutex_t m_mutex;
 };
+
+class locker_guard
+{
+public:
+    explicit locker_guard(locker& lock) : locker_(lock)
+    {
+        locker_.lock();
+    }
+
+    ~locker_guard()
+    {
+        locker_.unlock();
+    }
+
+    //noncopyable
+    locker_guard(const locker_guard&) = delete;
+    locker_guard& operator=(const locker_guard&) = delete;
+
+private:
+    locker& locker_;
+};
+
 class cond
 {
 public:

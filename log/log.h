@@ -40,9 +40,8 @@ private:
         //从阻塞队列中取出一个日志string，写入文件
         while (m_log_queue->pop(single_log))
         {
-            m_mutex.lock();
+            locker_guard lock(m_mutex);
             fputs(single_log.c_str(), m_fp);
-            m_mutex.unlock();
         }
     }
 
@@ -57,7 +56,7 @@ private:
     char *m_buf;
     block_queue<string> *m_log_queue; //阻塞队列
     bool m_is_async;                  //是否同步标志位
-    locker m_mutex;
+    mutable locker m_mutex;
     int m_close_log; //关闭日志
 };
 

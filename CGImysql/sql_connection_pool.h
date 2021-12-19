@@ -33,7 +33,7 @@ private:
 	int m_MaxConn;  //最大连接数
 	int m_CurConn;  //当前已使用的连接数
 	int m_FreeConn; //当前空闲的连接数
-	locker lock;
+	mutable locker lock;	//读取函数也需要访问锁
 	list<MYSQL *> connList; //连接池
 	sem reserve;
 
