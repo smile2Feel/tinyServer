@@ -5,13 +5,10 @@
 #include <list>
 #include <mysql/mysql.h>
 #include <error.h>
-#include <string.h>
 #include <iostream>
 #include <string>
 #include "../lock/locker.h"
 #include "../log/log.h"
-
-using namespace std;
 
 class connection_pool
 {
@@ -24,7 +21,7 @@ public:
 	//单例模式
 	static connection_pool *GetInstance();
 
-	void init(string url, string User, string PassWord, string DataBaseName, int Port, int MaxConn, int close_log); 
+	void init(std::string url, std::string User, std::string PassWord, std::string DataBaseName, int Port, int MaxConn, int close_log); 
 
 private:
 	connection_pool();
@@ -34,15 +31,15 @@ private:
 	int m_CurConn;  //当前已使用的连接数
 	int m_FreeConn; //当前空闲的连接数
 	mutable locker lock;	//读取函数也需要访问锁
-	list<MYSQL *> connList; //连接池
+	std::list<MYSQL *> connList; //连接池
 	sem reserve;
 
 public:
-	string m_url;			 //主机地址
-	string m_Port;		 //数据库端口号
-	string m_User;		 //登陆数据库用户名
-	string m_PassWord;	 //登陆数据库密码
-	string m_DatabaseName; //使用数据库名
+	std::string m_url;			 //主机地址
+	std::string m_Port;		 //数据库端口号
+	std::string m_User;		 //登陆数据库用户名
+	std::string m_PassWord;	 //登陆数据库密码
+	std::string m_DatabaseName; //使用数据库名
 	int m_close_log;	//日志开关
 };
 

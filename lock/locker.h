@@ -104,7 +104,10 @@ private:
 class cond
 {
 public:
-    cond()
+    cond(const cond&) = delete;
+    cond& operator=(const cond&) = delete;
+    
+    explicit cond(locker& mutex) : m_lock(mutex)
     {
         if (pthread_cond_init(&m_cond, NULL) != 0)
         {
@@ -116,19 +119,19 @@ public:
     {
         pthread_cond_destroy(&m_cond);
     }
-    bool wait(pthread_mutex_t *m_mutex)
+    bool wait()
     {
         int ret = 0;
         //pthread_mutex_lock(&m_mutex);
-        ret = pthread_cond_wait(&m_cond, m_mutex);
+        ret = pthread_cond_wait(&m_cond, m_lock.get());
         //pthread_mutex_unlock(&m_mutex);
         return ret == 0;
     }
-    bool timewait(pthread_mutex_t *m_mutex, struct timespec t)
+    bool timewait(struct timespec t)
     {
         int ret = 0;
         //pthread_mutex_lock(&m_mutex);
-        ret = pthread_cond_timedwait(&m_cond, m_mutex, &t);
+        ret = pthread_cond_timedwait(&m_cond, m_lock.get(), &t);
         //pthread_mutex_unlock(&m_mutex);
         return ret == 0;
     }
@@ -142,7 +145,7 @@ public:
     }
 
 private:
-    //static pthread_mutex_t m_mutex;
+    locker& m_lock;
     pthread_cond_t m_cond;
 };
 #endif

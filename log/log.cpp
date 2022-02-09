@@ -1,10 +1,8 @@
-#include <string.h>
 #include <time.h>
 #include <sys/time.h>
 #include <stdarg.h>
 #include "log.h"
 #include <pthread.h>
-using namespace std;
 
 Log::Log()
 {
@@ -26,7 +24,7 @@ bool Log::init(const char *file_name, int close_log, int log_buf_size, int split
     if (max_queue_size >= 1)
     {
         m_is_async = true;
-        m_log_queue = new block_queue<string>(max_queue_size);
+        m_log_queue = new block_queue<std::string>(max_queue_size);
         pthread_t tid;
         //flush_log_thread为回调函数,这里表示创建线程异步写日志
         pthread_create(&tid, NULL, flush_log_thread, NULL);
@@ -125,7 +123,7 @@ void Log::write_log(int level, const char *format, ...)
     va_list valst;
     va_start(valst, format);
 
-    string log_str;
+    std::string log_str;
 
     //写入的具体时间内容格式
     int n = snprintf(m_buf, 48, "%d-%02d-%02d %02d:%02d:%02d.%06ld %s ",

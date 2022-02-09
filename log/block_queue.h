@@ -11,13 +11,13 @@
 #include <pthread.h>
 #include <sys/time.h>
 #include "../lock/locker.h"
-using namespace std;
 
 template <class T>
 class block_queue
 {
 public:
     block_queue(int max_size = 1000)
+      : m_cond(m_mutex)
     {
         if (max_size <= 0)
         {
@@ -138,7 +138,7 @@ public:
         locker_guard scopeLock(m_mutex);
         while (m_size <= 0)
         {
-            if (!m_cond.wait(m_mutex.get()))
+            if (!m_cond.wait())
             {
                 return false;
             }
@@ -161,7 +161,7 @@ public:
         {
             t.tv_sec = now.tv_sec + ms_timeout / 1000;
             t.tv_nsec = (ms_timeout % 1000) * 1000;
-            if (!m_cond.timewait(m_mutex.get(), t))
+            if (!m_cond.timewait(t))
             {
                 return false;
             }

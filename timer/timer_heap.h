@@ -11,7 +11,6 @@
 #include <arpa/inet.h>
 #include <assert.h>
 #include <sys/stat.h>
-#include <string.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,6 +19,8 @@
 #include <errno.h>
 #include <sys/wait.h>
 #include <sys/uio.h>
+#include <deque>
+#include <queue>
 
 #include <time.h>
 #include "../log/log.h"
@@ -36,33 +37,33 @@ struct client_data
 class util_timer
 {
 public:
-    util_timer() : prev(NULL), next(NULL) {}
-
-public:
     time_t expire;
-    
     void (* cb_func)(client_data *);
     client_data *user_data;
-    util_timer *prev;
-    util_timer *next;
 };
 
-class sort_timer_lst
+class timer_comparer
 {
 public:
-    sort_timer_lst();
-    ~sort_timer_lst();
+    bool operator() (const util_timer* fst, const util_timer* sec)
+    {
+        return fst->expire < sec->expire;
+    }
+};
+class timer_heap
+{
+public:
+    ~timer_heap();
 
     void add_timer(util_timer *timer);
-    void adjust_timer(util_timer *timer);
     void del_timer(util_timer *timer);
+    void pop_timer();
+    util_timer* top() const;
+    bool empty() const;
     void tick();
 
 private:
-    void add_timer(util_timer *timer, util_timer *lst_head);
-
-    util_timer *head;
-    util_timer *tail;
+    std::priority_queue<util_timer*, std::deque<util_timer*>, timer_comparer> heap;
 };
 
 class Utils
@@ -92,7 +93,7 @@ public:
 
 public:
     static int *u_pipefd;
-    sort_timer_lst m_timer_lst;
+    timer_heap m_timer_lst;
     static int u_epollfd;
     int m_TIMESLOT;
 };

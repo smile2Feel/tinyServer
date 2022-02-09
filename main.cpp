@@ -3,9 +3,9 @@
 int main(int argc, char *argv[])
 {
     //需要修改的数据库信息,登录名,密码,库名
-    string user = "tinyServer";
-    string passwd = "Tencent2021";
-    string databasename = "tinyserver";
+    const std::string user = "tinyServer";
+    const std::string passwd = "Tencent2021";
+    const std::string databasename = "tinyserver";
 
     //命令行解析
     Config config;

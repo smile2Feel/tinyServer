@@ -1,14 +1,11 @@
 #include <mysql/mysql.h>
 #include <stdio.h>
 #include <string>
-#include <string.h>
 #include <stdlib.h>
 #include <list>
 #include <pthread.h>
 #include <iostream>
 #include "sql_connection_pool.h"
-
-using namespace std;
 
 connection_pool::connection_pool()
 {
@@ -23,7 +20,7 @@ connection_pool *connection_pool::GetInstance()
 }
 
 //构造初始化
-void connection_pool::init(string url, string User, string PassWord, string DBName, int Port, int MaxConn, int close_log)
+void connection_pool::init(std::string url, std::string User, std::string PassWord, std::string DBName, int Port, int MaxConn, int close_log)
 {
 	m_url = url;
 	m_Port = Port;
@@ -104,7 +101,7 @@ void connection_pool::DestroyPool()
 	
 	if (connList.size() > 0)
 	{
-		list<MYSQL *>::iterator it;
+		std::list<MYSQL *>::iterator it;
 		for (it = connList.begin(); it != connList.end(); ++it)
 		{
 			MYSQL *con = *it;
