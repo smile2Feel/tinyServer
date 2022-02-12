@@ -30,9 +30,9 @@
 class http_conn : noncopyable
 {
 public:
-    static const int FILENAME_LEN = 200;
-    static const int READ_BUFFER_SIZE = 2048;
-    static const int WRITE_BUFFER_SIZE = 1024;
+    static constexpr int FILENAME_LEN = 200;
+    static constexpr int READ_BUFFER_SIZE = 2048;
+    static constexpr int WRITE_BUFFER_SIZE = 1024;
     enum METHOD
     {
         GET = 0,
@@ -71,8 +71,8 @@ public:
 
 //todo: need copy-control there
 public:
-    http_conn() {}
-    ~http_conn() {}
+    http_conn() = default;
+    ~http_conn() = default;
 
 public:
     void init(int sockfd, const sockaddr_in &addr, char *, int, int, std::string user, std::string passwd, std::string sqlname);
@@ -80,7 +80,7 @@ public:
     void process();
     bool read_once();
     bool write();
-    sockaddr_in *get_address()
+    sockaddr_in *get_address() const
     {
         return &m_address;
     }
@@ -97,7 +97,7 @@ private:
     HTTP_CODE parse_headers(char *text);
     HTTP_CODE parse_content(char *text);
     HTTP_CODE do_request();
-    char *get_line() { return m_read_buf + m_start_line; };
+    char *get_line() const { return m_read_buf + m_start_line; };
     LINE_STATUS parse_line();
     void unmap();
     bool add_response(const char *format, ...);

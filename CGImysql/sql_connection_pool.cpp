@@ -117,7 +117,7 @@ bool connection_pool::ReleaseConnection(const std::shared_ptr<sql_connection>& c
 }
 
 //当前空闲的连接数
-int connection_pool::GetFreeConn()
+int connection_pool::GetFreeConn() const
 {
 	return this->m_FreeConn;
 }

@@ -32,7 +32,7 @@ public:
 	// can't return a stack object's reference
 	std::shared_ptr<sql_connection> GetConnection() const;
 	bool ReleaseConnection(const std::shared_ptr<sql_connection>& con)
-	int GetFreeConn();					 //获取连接
+	int GetFreeConn() const;					 //获取空闲连接数
 
 	//单例模式
 	static connection_pool *GetInstance();
