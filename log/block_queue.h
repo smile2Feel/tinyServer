@@ -11,9 +11,9 @@
 #include <pthread.h>
 #include <sys/time.h>
 #include "../lock/locker.h"
-
+#include "../noncopyable.h"
 template <class T>
-class block_queue
+class block_queue : noncopyable
 {
 public:
     block_queue(int max_size = 1000)

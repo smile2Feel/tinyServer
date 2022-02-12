@@ -19,13 +19,15 @@
 #include <sys/wait.h>
 #include <sys/uio.h>
 #include <map>
+#include <memory>
 
 #include "../lock/locker.h"
 #include "../CGImysql/sql_connection_pool.h"
 #include "../timer/timer_heap.h"
 #include "../log/log.h"
+#include "noncopyable.h"
 
-class http_conn
+class http_conn : noncopyable
 {
 public:
     static const int FILENAME_LEN = 200;
@@ -67,6 +69,7 @@ public:
         LINE_OPEN
     };
 
+//todo: need copy-control there
 public:
     http_conn() {}
     ~http_conn() {}
@@ -81,7 +84,7 @@ public:
     {
         return &m_address;
     }
-    void initmysql_result(connection_pool *connPool);
+    static void http_conn::initmysql_result();
     int timer_flag;
     int improv;
 
@@ -109,7 +112,6 @@ private:
 public:
     static int m_epollfd;
     static int m_user_count;
-    MYSQL *mysql;
     int m_state;  //读为0, 写为1
 
 private:
@@ -139,13 +141,14 @@ private:
     int bytes_have_send;
     char *doc_root;
 
-    std::map<std::string, std::string> m_users;
     int m_TRIGMode;
     int m_close_log;
 
     char sql_user[100];
     char sql_passwd[100];
     char sql_name[100];
+    static mutable locker m_lock;
+    static std::map<std::string, std::string> m_users;
 };
 
 #endif

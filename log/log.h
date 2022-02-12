@@ -7,8 +7,9 @@
 #include <stdarg.h>
 #include <pthread.h>
 #include "block_queue.h"
+#include "../noncopyable.h"
 
-class Log
+class Log : noncopyable
 {
 public:
     //C++11以后,使用局部变量懒汉不用加锁

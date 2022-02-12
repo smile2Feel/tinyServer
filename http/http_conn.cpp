@@ -2,7 +2,6 @@
 
 #include <mysql/mysql.h>
 #include <fstream>
-
 //定义http响应的一些状态信息
 const char *ok_200_title = "OK";
 const char *error_400_title = "Bad Request";
@@ -14,38 +13,15 @@ const char *error_404_form = "The requested file was not found on this server.\n
 const char *error_500_title = "Internal Error";
 const char *error_500_form = "There was an unusual problem serving the request file.\n";
 
-//todo :better use static variable
-locker m_lock;
-std::map<std::string, std::string> users;
+locker http_conn::m_lock;
+std::map<std::string, std::string> http_conn::m_users;
 
-void http_conn::initmysql_result(connection_pool *connPool)
+void http_conn::initmysql_result()
 {
-    //先从连接池中取一个连接
-    MYSQL *mysql = NULL;
-    connectionRAII mysqlcon(&mysql, connPool);
+    connection_pool_guard mysqlcon();
 
-    //在user表中检索username，passwd数据，浏览器端输入
-    if (mysql_query(mysql, "SELECT username,passwd FROM user"))
-    {
-        LOG_ERROR("SELECT error:%s\n", mysql_error(mysql));
-    }
-
-    //从表中检索完整的结果集
-    MYSQL_RES *result = mysql_store_result(mysql);
-
-    //返回结果集中的列数
-    int num_fields = mysql_num_fields(result);
-
-    //返回所有字段结构的数组
-    MYSQL_FIELD *fields = mysql_fetch_fields(result);
-
-    //从结果集中获取下一行，将对应的用户名和密码，存入map中
-    while (MYSQL_ROW row = mysql_fetch_row(result))
-    {
-        std::string temp1(row[0]);
-        std::string temp2(row[1]);
-        users[temp1] = temp2;
-    }
+    locker_guard mutex(m_lock);
+    mysqlcon.get_user_table(m_users);
 }
 
 //对文件描述符设置非阻塞
@@ -136,7 +112,6 @@ void http_conn::init(int sockfd, const sockaddr_in &addr, char *root, int TRIGMo
 //check_state默认为分析请求行状态
 void http_conn::init()
 {
-    mysql = NULL;
     bytes_to_send = 0;
     bytes_have_send = 0;
     m_check_state = CHECK_STATE_REQUESTLINE;
@@ -431,11 +406,12 @@ http_conn::HTTP_CODE http_conn::do_request()
             strcat(sql_insert, password);
             strcat(sql_insert, "')");
 
-            if (users.find(name) == users.end())
+            if (m_users.find(name) == m_users.end())
             {
+                connection_pool_guard con;
                 locker_guard scopeLock(m_lock);
-                int res = mysql_query(mysql, sql_insert);
-                users.insert(std::pair<std::string, std::string>(name, password));
+                int res = con.query(sql_insert);
+                m_users.insert(std::pair<std::string, std::string>(name, password));
 
                 if (!res)
                     strcpy(m_url, "/log.html");
@@ -449,7 +425,7 @@ http_conn::HTTP_CODE http_conn::do_request()
         //若浏览器端输入的用户名和密码在表中可以查找到，返回1，否则返回0
         else if (*(p + 1) == '2')
         {
-            if (users.find(name) != users.end() && users[name] == password)
+            if (m_users.find(name) != m_users.end() && m_users[name] == password)
                 strcpy(m_url, "/welcome.html");
             else
                 strcpy(m_url, "/logError.html");

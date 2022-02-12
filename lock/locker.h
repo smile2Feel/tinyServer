@@ -5,11 +5,13 @@
 #include <pthread.h>
 #include <semaphore.h>
 
+#include "../noncopyable.h"
+
 //originally check for PTHREAD_RETURN_VALUE
 #define MCHECK(ret) ({ __typeof__ (ret) errnum = (ret);               \
                         assert(errnum == 0); (void) errnum;})
 
-class sem
+class sem : noncopyable
 {
 public:
     sem()
@@ -43,7 +45,7 @@ private:
     sem_t m_sem;
 };
 
-class locker
+class locker : noncopyable
 {
 public:
     locker()
@@ -72,15 +74,11 @@ public:
         return &m_mutex;
     }
 
-    //noncopyable
-    locker(const locker&) = delete;
-    locker& operator=(const locker&) = delete;
-
 private:
     pthread_mutex_t m_mutex;
 };
 
-class locker_guard
+class locker_guard : noncopyable
 {
 public:
     explicit locker_guard(locker& lock) : locker_(lock)
@@ -101,7 +99,7 @@ private:
     locker& locker_;
 };
 
-class cond
+class cond : noncopyable
 {
 public:
     cond(const cond&) = delete;

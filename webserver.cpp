@@ -3,6 +3,7 @@
 WebServer::WebServer()
 {
     //http_conn类对象
+    //todo: wtf?
     users = new http_conn[MAX_FD];
 
     //root文件夹路径
@@ -91,7 +92,7 @@ void WebServer::sql_pool()
     m_connPool->init("localhost", m_user, m_passWord, m_databaseName, 3306, m_sql_num, m_close_log);
 
     //初始化数据库读取表
-    users->initmysql_result(m_connPool);
+    users->initmysql_result();
 }
 
 void WebServer::thread_pool()

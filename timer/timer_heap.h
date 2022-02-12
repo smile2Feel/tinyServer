@@ -24,6 +24,7 @@
 
 #include <time.h>
 #include "../log/log.h"
+#include "../noncopyable.h"
 
 class util_timer;
 
@@ -50,7 +51,7 @@ public:
         return fst->expire < sec->expire;
     }
 };
-class timer_heap
+class timer_heap : noncopyable
 {
 public:
     ~timer_heap();
@@ -69,9 +70,6 @@ private:
 class Utils
 {
 public:
-    Utils() {}
-    ~Utils() {}
-
     void init(int timeslot);
 
     //对文件描述符设置非阻塞
