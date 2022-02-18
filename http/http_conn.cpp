@@ -15,6 +15,9 @@ constexpr const char *error_500_form = "There was an unusual problem serving the
 
 locker http_conn::m_lock;
 std::map<std::string, std::string> http_conn::m_users;
+constexpr int http_conn::FILENAME_LEN;
+constexpr int http_conn::READ_BUFFER_SIZE;
+constexpr int http_conn::WRITE_BUFFER_SIZE;
 
 void http_conn::initmysql_result()
 {
